@@ -246,7 +246,7 @@ const updateAge = (req, res) => {
 
     savePromise.then(() => res.json({ name: newDog.name, breed: newDog.breed, age: newDog.age }));
 
-    savePromise.catch(res.json({ err }));
+    savePromise.catch(() => res.json({ err }));
 
     return res;
   });
