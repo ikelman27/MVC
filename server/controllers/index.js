@@ -12,7 +12,7 @@ const defaultData = {
   bedsOwned: 0,
 };
 
-const defaultDog= {
+const defaultDog = {
   name: 'good Boi',
   breed: 'any',
   age: 10,
@@ -50,6 +50,10 @@ const readAllCats = (req, res, callback) => {
   // That limits your search to only things that match the criteria
   // The find function returns an array of matching objects
   Cat.find(callback);
+};
+
+const readAllDogs = (req, res, callback) => {
+  Dog.find(callback);
 };
 
 
@@ -121,6 +125,19 @@ const hostPage3 = (req, res) => {
   res.render('page3');
 };
 
+const hostPage4 = (req, res) => {
+  const callback = (err, docs) => {
+    if (err) {
+      return res.json({ err }); // if error, return it
+    }
+
+    // return success
+    return res.render('page4', { dogs: docs });
+  };
+
+  readAllDogs(req, res, callback);
+};
+
 // function to handle get request to send the name
 // controller functions in Express receive the full HTTP request
 // and a pre-filled out response object to send
@@ -133,8 +150,6 @@ const getName = (req, res) => {
 
 
 const setDog = (req, res) => {
-  
-
   if (!req.body.name || !req.body.breed || !req.body.age) {
     return res.status(400).json({ error: 'firstname,lastname and beds are all required' });
   }
@@ -149,10 +164,9 @@ const setDog = (req, res) => {
 
   const savePromise = newDog.save();
   savePromise.then(() => {
- 
     lastDog = newDog;
-  
-    res.json({ name: lastDog.name, breed: lastDog.breed, age: lastDog.breed });
+
+    res.json({ name: lastDog.name, breed: lastDog.breed, age: lastDog.age });
   });
 
   // if error, return it
@@ -161,13 +175,14 @@ const setDog = (req, res) => {
   return res;
 };
 
+
 // function to handle a request to set the name
 // controller functions in Express receive the full HTTP request
 // and get a pre-filled out response object to send
 // ADDITIONALLY, with body-parser we will get the
 // body/form/POST data in the request as req.body
 const setName = (req, res) => {
-  console.log(req.body);
+  // console.log(req.body);
   // check if the required fields exist
   // normally you would also perform validation
   // to know if the data they sent you was real
@@ -206,6 +221,36 @@ const setName = (req, res) => {
   return res;
 };
 
+
+const updateAge = (req, res) => {
+  if (!req.body.name) {
+    return res.json({ error: 'Name is required to perform a search' });
+  }
+
+  return Dog.findByName(req.body.name, (err, doc) => {
+    if (err) {
+      return res.json({ err }); // if error, return it
+    }
+
+    // if no matches, let them know
+    // (does not necessarily have to be an error since technically it worked correctly)
+    if (!doc) {
+      return res.json({ error: 'No dogs found' });
+    }
+
+    const newDog = doc;
+
+    newDog.age++;
+
+    const savePromise = newDog.save();
+
+    savePromise.then(() => res.json({ name: newDog.name, breed: newDog.breed, age: newDog.age }));
+
+    savePromise.catch(res.json({ err }));
+
+    return res;
+  });
+};
 
 // function to handle requests search for a name and return the object
 // controller functions in Express receive the full HTTP request
@@ -294,6 +339,7 @@ module.exports = {
   page1: hostPage1,
   page2: hostPage2,
   page3: hostPage3,
+  page4: hostPage4,
   readCat,
   getName,
   setName,
@@ -301,4 +347,5 @@ module.exports = {
   searchName,
   notFound,
   setDog,
+  updateAge,
 };
